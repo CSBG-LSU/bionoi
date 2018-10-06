@@ -101,8 +101,8 @@ def voronoi_atoms(bs,bs_out=None,size=None):
     pt = atoms.df[['subst_name','atom_type', 'atom_name','x','y','z']]
     
     # convert 3D to 2D 
-    pt.loc[:,'X'] = pt.x/abs(pt.z)**.5
-    pt.loc[:,'Y'] = pt.y/abs(pt.z)**.5
+    pt.loc[:,'P(x)'] = pt.x/abs(pt.z)**.5
+    pt.loc[:,'P(y)'] = pt.y/abs(pt.z)**.5
     
     # setting output image size, labels off, set 120 dpi w x h
     size = 120 if size is None else size
@@ -110,7 +110,7 @@ def voronoi_atoms(bs,bs_out=None,size=None):
     ax = plt.subplot(111); ax.axis('off') ;ax.tick_params(axis='both', bottom='off', left='off',right='off',labelleft='off', labeltop='off',labelright='off', labelbottom='off')
 
     # compute Voronoi tesselation
-    vor = Voronoi(pt[['X','Y']])
+    vor = Voronoi(pt[['P(x)','P(y)']])
     regions, vertices = voronoi_finite_polygons_2d(vor)
     polygons = []
     for i in regions:
