@@ -158,4 +158,12 @@ def myargs():
 
 if __name__ == "__main__":
     args = myargs()
+    
+    # Check for color mapping file 
+    try:
+        cMapF = open("./labels_mol2.csv")
+    except FileNotFoundError:
+        print("Color mapping file not found in directory")
+    
+    # Run 
     voronoi_atoms(args.mol,args.out,args.dpi, alpha=args.alpha)
