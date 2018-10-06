@@ -93,7 +93,7 @@ def voronoi_finite_polygons_2d(vor, radius=None):
     return new_regions, np.asarray(new_vertices)
 
 
-def voronoi_atoms(bs,bs_out=None,size=None, alpha=0.5):
+def voronoi_atoms(bs,bs_out=None,size=None, alpha=0.5, projection=lambda a,b: a/abs(b)):
     pd.options.mode.chained_assignment = None
     
     # read molecules in mol2 format 
@@ -101,7 +101,6 @@ def voronoi_atoms(bs,bs_out=None,size=None, alpha=0.5):
     pt = atoms.df[['subst_name','atom_type', 'atom_name','x','y','z']]
     
     # convert 3D  to 2D 
-    projection = lambda a,b: a/abs(b)
     pt["P(x)"] = pt[['x','y','z']].apply(lambda coord: projection(coord.x,coord.z), axis=1) 
     pt["P(y)"] = pt[['x','y','z']].apply(lambda coord: projection(coord.y,coord.z), axis=1)  
 
