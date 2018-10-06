@@ -93,7 +93,8 @@ def voronoi_finite_polygons_2d(vor, radius=None):
     return new_regions, np.asarray(new_vertices)
 
 
-def voronoi_atoms(bs,bs_out=None,size=None, alpha=0.5, projection=lambda a,b: a/abs(b)):
+def voronoi_atoms(bs,cmap, bs_out=None,size=None, alpha=0.5, projection=lambda a,b: a/abs(b)):
+
     pd.options.mode.chained_assignment = None
     
     # read molecules in mol2 format 
@@ -119,26 +120,28 @@ def voronoi_atoms(bs,bs_out=None,size=None, alpha=0.5, projection=lambda a,b: a/
         polygons.append(polygon)
     pt.loc[:,'polygons'] = polygons
     
-    
-    
-     # color by atom types
-    atom_color = {'C.3':'#006600','N.3':'#000066','O.3':'#660000','S.3':'#666600','C.ar':'#009900','N.ar':'#000099','C.2':'#00CC00','N.2':'#0000CC','O.2':'#C00000','C.cat': '#00FF00','N.am':'#3333FF','N.2':'#3333FF','N.pl3':'#6666FF','O.co2':'#FF9999'}         
-    
+    # Compute Voronoi tesselation
+    vor = Voronoi(atoms[['P(x)','P(y)']])
+    regions, vertices = voronoi_finite_polygons_2d(vor)
+    polygons = []
+    for reg in regions:
+        polygon = vertices[reg]
+        polygons.append(polygon)
+    atoms.loc[:,'polygons'] = polygons
+        
     # Check alpha
     alpha=float(alpha)
         
     for i, row in atoms.iterrows():
-        tmp1 = atoms.loc[i][['atom_type']][0]
-        col1 = atom_color[tmp1]
-        p1 = matplotlib.patches.Polygon(np.array(atoms.loc[i][['polygons']])[0],  
-                                        facecolor=col1, 
-                                        edgecolor='black',
-                                        alpha=alpha 
-                                       )
-        ax.add_patch(p1)
-        
-    ax.set_xlim(vor.min_bound[0] - 0.1, vor.max_bound[0] + 0.1)
-    ax.set_ylim(vor.min_bound[1] - 0.1, vor.max_bound[1] + 0.1)
+        atom_type = atoms.loc[i][['atom_type']][0]
+        colored_cell = matplotlib.patches.Polygon(row["polygons"],  
+                                        facecolor = cmap[atom_type]["color"], 
+                                        edgecolor = 'black',
+                                        alpha = alpha  )
+        ax.add_patch(colored_cell)
+     
+    ax.set_xlim(vor.min_bound[0] , vor.max_bound[0])
+    ax.set_ylim(vor.min_bound[1] , vor.max_bound[1])
     
     # output image saving in any format; default jpg
     bs_out = 'out.jpg' if bs_out is None else bs_out
@@ -157,13 +160,18 @@ def myargs():
     return args
 
 if __name__ == "__main__":
-    args = myargs()
+    args = getArgs()
     
-    # Check for color mapping file 
+    # Check for color mapping file, make dict 
     try:
-        cMapF = open("./labels_mol2.csv")
+        with open("./labels_mol2.csv") as cMapF:
+            
+            # Parse color map file 
+            cmap  = np.array([line.replace("\n","").split("; ") for line in cMapF.readlines() if not line.startswith("#")])
+            # To dict
+            cmap = {atom:{"color":color, "definition":definition} for atom, definition, color in cmap}     
     except FileNotFoundError:
-        print("Color mapping file not found in directory")
-    
+        raise FileNotFoundError("Color mapping file not found in directory")
+ 
     # Run 
-    voronoi_atoms(args.mol,args.out,args.dpi, alpha=args.alpha)
+    voronoi_atoms(args.mol,cmap, bs_out=args.out,size=args.dpi)
