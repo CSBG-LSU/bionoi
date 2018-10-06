@@ -93,7 +93,7 @@ def voronoi_finite_polygons_2d(vor, radius=None):
     return new_regions, np.asarray(new_vertices)
 
 
-def voronoi_atoms(bs,bs_out=None,size=None):
+def voronoi_atoms(bs,bs_out=None,size=None, alpha=0.5):
     pd.options.mode.chained_assignment = None
     
     # read molecules in mol2 format 
@@ -120,14 +120,24 @@ def voronoi_atoms(bs,bs_out=None,size=None):
         polygons.append(polygon)
     pt.loc[:,'polygons'] = polygons
     
-    # color by atom types
+    
+    
+     # color by atom types
     atom_color = {'C.3':'#006600','N.3':'#000066','O.3':'#660000','S.3':'#666600','C.ar':'#009900','N.ar':'#000099','C.2':'#00CC00','N.2':'#0000CC','O.2':'#C00000','C.cat': '#00FF00','N.am':'#3333FF','N.2':'#3333FF','N.pl3':'#6666FF','O.co2':'#FF9999'}         
-    for i, row in pt.iterrows():
-        tmp1 = pt.loc[i][['atom_type']][0]
-        tmp3 = np.array(pt.loc[i][['polygons']])[0]
+    
+    # Check alpha
+    alpha=float(alpha)
+        
+    for i, row in atoms.iterrows():
+        tmp1 = atoms.loc[i][['atom_type']][0]
         col1 = atom_color[tmp1]
-        p1 = matplotlib.patches.Polygon(tmp3, facecolor=col1, edgecolor='black', alpha=0.5)
+        p1 = matplotlib.patches.Polygon(np.array(atoms.loc[i][['polygons']])[0],  
+                                        facecolor=col1, 
+                                        edgecolor='black',
+                                        alpha=alpha 
+                                       )
         ax.add_patch(p1)
+        
     ax.set_xlim(vor.min_bound[0] - 0.1, vor.max_bound[0] + 0.1)
     ax.set_ylim(vor.min_bound[1] - 0.1, vor.max_bound[1] + 0.1)
     
@@ -142,9 +152,11 @@ def myargs():
                         'location of the protein/ligand mol2 file path')
     parser.add_argument('-out', required = False, help = 'location for the image to be saved')
     parser.add_argument('-dpi', required = False, help = 'image quality in dpi, eg: 300')
+    parser.add_argument('-alpha', required = False, help = 'alpha for color of cells')
+
     args = parser.parse_args()
     return args
 
 if __name__ == "__main__":
     args = myargs()
-    voronoi_atoms(args.mol,args.out,args.dpi)
+    voronoi_atoms(args.mol,args.out,args.dpi, alpha=args.alpha)
