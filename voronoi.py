@@ -100,9 +100,11 @@ def voronoi_atoms(bs,bs_out=None,size=None):
     atoms = PandasMol2().read_mol2(bs)
     pt = atoms.df[['subst_name','atom_type', 'atom_name','x','y','z']]
     
-    # convert 3D to 2D 
-    pt.loc[:,'P(x)'] = pt.x/abs(pt.z)**.5
-    pt.loc[:,'P(y)'] = pt.y/abs(pt.z)**.5
+    # convert 3D  to 2D 
+    projection = lambda a,b: a/abs(b)
+    pt["P(x)"] = pt[['x','y','z']].apply(lambda coord: projection(coord.x,coord.z), axis=1) 
+    pt["P(y)"] = pt[['x','y','z']].apply(lambda coord: projection(coord.y,coord.z), axis=1)  
+
     
     # setting output image size, labels off, set 120 dpi w x h
     size = 120 if size is None else size
