@@ -111,33 +111,27 @@ def fig_to_numpy(fig, alpha=1) -> np.ndarray:
     
     return data
 
-def voronoi_atoms(bs,cmap, bs_out=None,size=None, alpha=0.5, projection=lambda a,b: a/abs(b)):
-
+def voronoi_atoms(bs,cmap, bs_out=None,size=None, alpha=0.5, save_fig=True, projection=lambda a,b: a/abs(b)**.5):
+    # Suppresses warning
     pd.options.mode.chained_assignment = None
     
-    # read molecules in mol2 format 
-    atoms = PandasMol2().read_mol2(bs)
-    pt = atoms.df[['subst_name','atom_type', 'atom_name','x','y','z']]
-    
+    # Read molecules in mol2 format 
+    mol2 = PandasMol2().read_mol2(bs)
+    atoms = mol2.df[['subst_name','atom_type', 'atom_name','x','y','z']] 
+   
     # convert 3D  to 2D 
-    pt["P(x)"] = pt[['x','y','z']].apply(lambda coord: projection(coord.x,coord.z), axis=1) 
-    pt["P(y)"] = pt[['x','y','z']].apply(lambda coord: projection(coord.y,coord.z), axis=1)  
+    atoms["P(x)"] = atoms[['x','y','z']].apply(lambda coord: projection(coord.x,coord.z), axis=1) 
+    atoms["P(y)"] = atoms[['x','y','z']].apply(lambda coord: projection(coord.y,coord.z), axis=1)  
+
 
     
-    # setting output image size, labels off, set 120 dpi w x h
-    size = 120 if size is None else size
-    figure = plt.figure(figsize=(2.69 , 2.70),dpi=int(size))
-    ax = plt.subplot(111); ax.axis('off') ;ax.tick_params(axis='both', bottom='off', left='off',right='off',labelleft='off', labeltop='off',labelright='off', labelbottom='off')
+    # setting output image size, labels off, set 128 dpi w x h
+    size = 128 if size is None else size
+    figure = plt.figure(figsize=(6 , 6),dpi=int(size))
+    ax = plt.subplot(111)
+    ax.axis('off')
+    ax.tick_params(axis='both', bottom=False, left=False,right=False,labelleft=False, labeltop=False,labelright=False, labelbottom=False)
 
-    # compute Voronoi tesselation
-    vor = Voronoi(pt[['P(x)','P(y)']])
-    regions, vertices = voronoi_finite_polygons_2d(vor)
-    polygons = []
-    for i in regions:
-        polygon = vertices[i]
-        polygons.append(polygon)
-    pt.loc[:,'polygons'] = polygons
-    
     # Compute Voronoi tesselation
     vor = Voronoi(atoms[['P(x)','P(y)']])
     regions, vertices = voronoi_finite_polygons_2d(vor)
@@ -150,21 +144,32 @@ def voronoi_atoms(bs,cmap, bs_out=None,size=None, alpha=0.5, projection=lambda a
     # Check alpha
     alpha=float(alpha)
         
+    colors = []
     for i, row in atoms.iterrows():
         atom_type = atoms.loc[i][['atom_type']][0]
+        color = cmap[atom_type]["color"]
+        colors.append(color)
         colored_cell = matplotlib.patches.Polygon(row["polygons"],  
-                                        facecolor = cmap[atom_type]["color"], 
+                                        facecolor = color, 
                                         edgecolor = 'black',
                                         alpha = alpha  )
         ax.add_patch(colored_cell)
+    atoms.loc[:,"color"] = colors
      
     ax.set_xlim(vor.min_bound[0] , vor.max_bound[0])
-    ax.set_ylim(vor.min_bound[1] , vor.max_bound[1])
-    
-    # output image saving in any format; default jpg
+    ax.set_ylim(vor.min_bound[1] , vor.max_bound[1] )
+
+    # Output image saving in any format; default jpg
     bs_out = 'out.jpg' if bs_out is None else bs_out
-    plt.savefig(bs_out, frameon=False,bbox_inches="tight", pad_inches=False)
-    return None
+    
+    # Get image as numpy array
+    figure.tight_layout(pad=0)
+    img = fig_to_numpy(figure, alpha=alpha)
+    
+    if save_fig: 
+        plt.savefig(bs_out, frameon=False,bbox_inches="tight", pad_inches=False)
+    
+    return atoms, vor, img
 
 def myargs():
     parser = argparse.ArgumentParser('python')                                              
