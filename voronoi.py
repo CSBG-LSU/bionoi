@@ -92,6 +92,24 @@ def voronoi_finite_polygons_2d(vor, radius=None):
 
     return new_regions, np.asarray(new_vertices)
 
+def fig_to_numpy(fig, alpha=1) -> np.ndarray:
+    '''
+    Converts matplotlib figure to a numpy array. 
+    
+    Source 
+    ------
+    Adapted from https://stackoverflow.com/questions/7821518/matplotlib-save-plot-to-numpy-array
+    '''
+    
+    # Setup figure 
+    fig.patch.set_alpha(alpha)    
+    fig.canvas.draw()
+
+    # Now we can save it to a numpy array.
+    data = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
+    data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+    
+    return data
 
 def voronoi_atoms(bs,cmap, bs_out=None,size=None, alpha=0.5, projection=lambda a,b: a/abs(b)):
 
