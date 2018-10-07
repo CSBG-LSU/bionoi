@@ -171,7 +171,7 @@ def voronoi_atoms(bs,cmap, bs_out=None,size=None, alpha=0.5, save_fig=True, proj
     
     return atoms, vor, img
 
-def myargs():
+def getArgs():
     parser = argparse.ArgumentParser('python')                                              
     parser.add_argument('-mol', required = True, help = 
                         'location of the protein/ligand mol2 file path')
