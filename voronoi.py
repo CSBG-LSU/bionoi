@@ -175,26 +175,32 @@ def getArgs():
     parser = argparse.ArgumentParser('python')                                              
     parser.add_argument('-mol', required = True, help = 
                         'location of the protein/ligand mol2 file path')
+    parser.add_argument('-cmap', required = False, help = 
+                        'location of the cmap file. \'./labels_mol2.csv\' is default. ')
     parser.add_argument('-out', required = False, help = 'location for the image to be saved')
     parser.add_argument('-dpi', required = False, help = 'image quality in dpi, eg: 300')
     parser.add_argument('-alpha', required = False, help = 'alpha for color of cells')
-
-    args = parser.parse_args()
-    return args
-
-if __name__ == "__main__":
-    args = getArgs()
     
+    return parser.parse_args()
+
+def Bionoi(mol, cmap_fpath="./labels_mol2.csv", bs_out='out.jpg', size=128, alpha=0.5):
     # Check for color mapping file, make dict 
     try:
-        with open("./labels_mol2.csv") as cMapF:
-            
+        with open(cmap_fpath) as cMapF:
             # Parse color map file 
             cmap  = np.array([line.replace("\n","").split("; ") for line in cMapF.readlines() if not line.startswith("#")])
             # To dict
-            cmap = {atom:{"color":color, "definition":definition} for atom, definition, color in cmap}     
+            cmap = {atom:{"color":color, "definition":definition} for atom, definition, color in cmap}
+            
     except FileNotFoundError:
         raise FileNotFoundError("Color mapping file not found in directory")
  
     # Run 
-    voronoi_atoms(args.mol,cmap, bs_out=args.out,size=args.dpi)
+    atoms, vor, img = voronoi_atoms(mol,cmap, bs_out=bs_out, size=size, alpha=alpha, save_fig=True)
+    
+    return atoms, vor, img
+
+if __name__ == "__main__":
+    args = getArgs()
+    atoms, vor, img = Bionoi(args.mol, bs_out=args.out,size=args.dpi, alpha=args.alpha)
+    
