@@ -119,11 +119,13 @@ def voronoi_atoms(bs,cmap, bs_out=None,size=None, alpha=0.5, save_fig=True, proj
     mol2 = PandasMol2().read_mol2(bs)
     atoms = mol2.df[['subst_name','atom_type', 'atom_name','x','y','z']] 
    
+    # Todo
+    # Align atoms to principal axis and save eigenvalue. 
+    # See issue #2
+
     # convert 3D  to 2D 
     atoms["P(x)"] = atoms[['x','y','z']].apply(lambda coord: projection(coord.x,coord.z), axis=1) 
     atoms["P(y)"] = atoms[['x','y','z']].apply(lambda coord: projection(coord.y,coord.z), axis=1)  
-
-
     
     # setting output image size, labels off, set 128 dpi w x h
     size = 128 if size is None else size
