@@ -180,9 +180,9 @@ def voronoi_atoms(bs, cmap, bs_out=None, size=None, alpha=0.5, save_fig=True, pr
 
 def getArgs():
     parser = argparse.ArgumentParser('python')
-    parser.add_argument('-mol',   default="./a.mol2",          required = False, help = 'the protein/ligand mol2 file')
+    parser.add_argument('-mol',   default="./4v94E.mol2",      required = False, help = 'the protein/ligand mol2 file')
     parser.add_argument('-cmap',  default="./labels_mol2.csv", required = False, help = 'the cmap file. ')
-    parser.add_argument('-out',   default="./a.jpg",           required = False, help = 'the outpuot image file')
+    parser.add_argument('-out',   default="./out.jpg",         required = False, help = 'the outpuot image file')
     parser.add_argument('-dpi',   default="120",               required = False, help = 'image quality in dpi')
     parser.add_argument('-alpha', default="0.5",               required = False, help = 'alpha for color of cells')
 
