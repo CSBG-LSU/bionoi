@@ -116,7 +116,7 @@ def fig_to_numpy(fig, alpha=1) -> np.ndarray:
 
     return data
 
-def voronoi_atoms(bs, cmap, bs_out=None, size=None, alpha=0.5, save_fig=True, projection=lambda a,b: a/abs(b)**.5):
+def voronoi_atoms(bs, cmap, bs_out=None, size=None, dpi=None, alpha=0.5, save_fig=True, projection=lambda a,b: a/abs(b)**.5):
     # Suppresses warning
     pd.options.mode.chained_assignment = None
 
@@ -132,9 +132,12 @@ def voronoi_atoms(bs, cmap, bs_out=None, size=None, alpha=0.5, save_fig=True, pr
     atoms["P(x)"] = atoms[['x','y','z']].apply(lambda coord: projection(coord.x,coord.z), axis=1)
     atoms["P(y)"] = atoms[['x','y','z']].apply(lambda coord: projection(coord.y,coord.z), axis=1)
 
-    # setting output image size, labels off, set 128 dpi w x h
+    # setting output image size, labels off, set 120 dpi w x h
     size = 128 if size is None else size
-    figure = plt.figure(figsize=(6 , 6),dpi=int(size))
+    dpi = 120 if dpi is None else dpi
+
+    figure = plt.figure(figsize=(int(size)/int(dpi) , int(size)/int(dpi)), dpi=int(dpi))
+
     ax = plt.subplot(111)
     ax.axis('off')
     ax.tick_params(axis='both', bottom=False, left=False,right=False,labelleft=False, labeltop=False,labelright=False, labelbottom=False)
@@ -174,7 +177,8 @@ def voronoi_atoms(bs, cmap, bs_out=None, size=None, alpha=0.5, save_fig=True, pr
     img = fig_to_numpy(figure, alpha=alpha)
 
     if save_fig:
-        plt.savefig(bs_out, frameon=False,bbox_inches="tight", pad_inches=False)
+        plt.subplots_adjust(bottom=0, top=1, left=0, right=1)
+        plt.savefig(bs_out, frameon=False, pad_inches=False)
 
     return atoms, vor, img
 
@@ -183,12 +187,13 @@ def getArgs():
     parser.add_argument('-mol',   default="./4v94E.mol2",      required = False, help = 'the protein/ligand mol2 file')
     parser.add_argument('-cmap',  default="./labels_mol2.csv", required = False, help = 'the cmap file. ')
     parser.add_argument('-out',   default="./out.jpg",         required = False, help = 'the outpuot image file')
-    parser.add_argument('-dpi',   default="120",               required = False, help = 'image quality in dpi')
+    parser.add_argument('-dpi',   default="50",               required = False, help = 'image quality in dpi')
+    parser.add_argument('-size',  default="128",               required = False, help = 'image size in pixels, eg: 128')
     parser.add_argument('-alpha', default="0.5",               required = False, help = 'alpha for color of cells')
 
     return parser.parse_args()
 
-def Bionoi(mol, cmap, bs_out, dpi, alpha):
+def Bionoi(mol, cmap, bs_out, size, dpi, alpha):
     # Check for color mapping file, make dict
     try:
         with open(cmap) as cMapF:
@@ -202,7 +207,7 @@ def Bionoi(mol, cmap, bs_out, dpi, alpha):
         raise FileNotFoundError("Color mapping file not found in directory")
 
     # Run
-    atoms, vor, img = voronoi_atoms(mol, cmap, bs_out=bs_out, size=dpi, alpha=alpha, save_fig=True)
+    atoms, vor, img = voronoi_atoms(mol, cmap, bs_out=bs_out, size=size, dpi=dpi, alpha=alpha, save_fig=True)
 
     return atoms, vor, img
 
@@ -210,7 +215,7 @@ def Bionoi(mol, cmap, bs_out, dpi, alpha):
 
 if __name__ == "__main__":
     args = getArgs()
-    atoms, vor, img = Bionoi(args.mol, args.cmap, args.out, args.dpi, args.alpha)
+    atoms, vor, img = Bionoi(args.mol, args.cmap, args.out, args.size, args.dpi, args.alpha)
     #atoms, vor, img = cProfile.run('Bionoi(args.mol, args.cmap, args.out, args.dpi, args.alpha)')
 
 
