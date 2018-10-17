@@ -116,7 +116,7 @@ def fig_to_numpy(fig, alpha=1) -> np.ndarray:
 
     return data
 
-def voronoi_atoms(bs, cmap, bs_out=None, size=None, dpi=None, alpha=0.5, save_fig=True, projection=lambda a,b: a/abs(b)**.5):
+def voronoi_atoms(bs, cmap, bs_out=None, size=None, dpi=None, alpha=0.5, save_fig=True, projection=lambda a,b: a/abs(b)**.5 if b!=0 else a):
     # Suppresses warning
     pd.options.mode.chained_assignment = None
 
