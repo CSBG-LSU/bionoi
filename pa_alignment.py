@@ -34,19 +34,20 @@ def vrrotvec2mat(r):
     )
     return m
         
-        
-inertia = np.cov(pocket_coords.T)
-e_values, e_vectors = np.linalg.eig(inertia)
-sorted_index = np.argsort(e_values)[::-1]
-sorted_vectors = e_vectors[:,sorted_index]
-# Align the first principal axes to the X-axes
-rx = vrrotvec(np.array([1,0,0]),sorted_vectors[:,0])
-mx = vrrotvec2mat(rx)
-pa1 = np.matmul(mx.T,sorted_vectors)
-# Align the second principal axes to the Y-axes
-ry = vrrotvec(np.array([0,1,0]),pa1[:,1])
-my = vrrotvec2mat(ry)
-transformation_matrix = np.matmul(my.T,mx.T)
-# transform the protein coordinates to the center of the pocket and align with the principal
-# axes with the pocket
-transformed_coords = (np.matmul(transformation_matrix,protein_coords.T)).T
+def main(pocket_coords):
+    inertia = np.cov(pocket_coords.T)
+    e_values, e_vectors = np.linalg.eig(inertia)
+    sorted_index = np.argsort(e_values)[::-1]
+    sorted_vectors = e_vectors[:,sorted_index]
+    # Align the first principal axes to the X-axes
+    rx = vrrotvec(np.array([1,0,0]),sorted_vectors[:,0])
+    mx = vrrotvec2mat(rx)
+    pa1 = np.matmul(mx.T,sorted_vectors)
+    # Align the second principal axes to the Y-axes
+    ry = vrrotvec(np.array([0,1,0]),pa1[:,1])
+    my = vrrotvec2mat(ry)
+    transformation_matrix = np.matmul(my.T,mx.T)
+    # transform the protein coordinates to the center of the pocket and align with the principal
+    # axes with the pocket
+    transformed_coords = (np.matmul(transformation_matrix,protein_coords.T)).T
+    return transformed_coords
