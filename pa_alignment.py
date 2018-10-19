@@ -1,3 +1,25 @@
+from biopandas import PandasMol2
+import numpy as np
+
+def parseProtein(protein_path, residue_path):
+    pmol = PandasMol2().read_mol2(protein_path)
+    protein = pmol.df
+    protein_coords = np.array([protein.x, protein.y, protein.z])
+    with open(residue_path) as in_strm:
+        line = in_strm.read()
+        l = line.replace('\n','')
+        resi =  [int(x) for x in l.split(' ')[1:]]
+    residues = protein[protein['subst_id'].isin(resi)]
+    pocket_coords = np.array([residues.x, residues.y, residues.z])
+    return protein_coords, pocket_coords
+
+def normalize(v):
+    """ vector normalization """
+    norm = np.linalg.norm(v)
+    if norm == 0: 
+       return v
+    return v / norm
+
 def vrrotvec(a,b):
     """ Function to rotate one vector to another, inspired by
     vrrotvec.m in MATLAB """
@@ -33,8 +55,11 @@ def vrrotvec2mat(r):
      [t*x*z - s*y,  t*y*z + s*x,  t*z*z + c]]
     )
     return m
-        
-def main(pocket_coords):
+
+def main(protein_path, residue_path):
+    protein_coords, pocket_coords = parseProtein(protein_path, residue_path)
+    pocket_center = np.mean(pocket_coords, axis = 0)
+    protein_coords = protein_coords - pocket_center
     inertia = np.cov(pocket_coords.T)
     e_values, e_vectors = np.linalg.eig(inertia)
     sorted_index = np.argsort(e_values)[::-1]
