@@ -25,7 +25,7 @@ create a 2D image using mol2 file in 2D or 3D format
 
     ./voronoi.py
     or
-    ./voronoi.py -mol a.mol2 -out a.jpg -dpi 120 -alpha 0.5
+    ./voronoi.py -mol 4v94E.mol2 -out out.jpg -dpi 120 -alpha 0.5 -size 128
 
 An example of voronoi image of ATP-binding site protein pocket colored by atom types:
 
