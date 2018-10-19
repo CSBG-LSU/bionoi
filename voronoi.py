@@ -56,7 +56,7 @@ def vrrotvec2mat(r):
     return m
 
 def alignment(pocket):
-    pocket_coords = np.array([pocket.x, pocket.y, pocket.z])
+    pocket_coords = np.array([pocket.x, pocket.y, pocket.z]).T
     pocket_center = np.mean(pocket_coords, axis = 0)
     pocket_coords = pocket_coords - pocket_center
     inertia = np.cov(pocket_coords.T)
@@ -73,7 +73,7 @@ def alignment(pocket):
     transformation_matrix = np.matmul(my.T,mx.T)
     # transform the protein coordinates to the center of the pocket and align with the principal
     # axes with the pocket
-    transformed_coords = (np.matmul(transformation_matrix,protein_coords.T)).T
+    transformed_coords = (np.matmul(transformation_matrix,pocket_coords.T)).T
     return transformed_coords
 
 def voronoi_finite_polygons_2d(vor, radius=None):
