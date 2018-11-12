@@ -229,13 +229,20 @@ def voronoi_atoms(bs, cmap, colorby,bs_out=None, size=None, dpi=None, alpha=0.5,
     # Check alpha
     alpha=float(alpha)
 
-    colors = []
+    # Color by colorby 
+    if colorby in ["atom_type","residue_type"]:
+        colors = [cmap[_type]["color"] for _type in atoms[colorby]]
+    elif colorby=="residue_num":
+        cmap = k_different_colors(len(set(atoms["res_id"])))
+        cmap = {res_num:color for res_num,color in zip(set(atoms["res_id"]),cmap)}
+        colors = atoms["res_id"].apply(lambda x: cmap[x])       
+    else:
+        raise ValueError
+    atoms["color"] = colors
+    
     for i, row in atoms.iterrows():
-        atom_type = atoms.loc[i][['atom_type']][0]
-        color = cmap[atom_type]["color"]
-        colors.append(color)
         colored_cell = matplotlib.patches.Polygon(row["polygons"],
-                                        facecolor = color,
+                                        facecolor = row['color'],
                                         edgecolor = 'black',
                                         alpha = alpha  )
         ax.add_patch(colored_cell)
