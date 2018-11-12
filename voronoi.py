@@ -269,20 +269,25 @@ def getArgs():
     return parser.parse_args()
 
 def Bionoi(mol, cmap, bs_out, size, dpi, alpha):
-    # Check for color mapping file, make dict
-    try:
-        with open(cmap) as cMapF:
-            # Parse color map file
-            cmap  = np.array([line.replace("\n","").split("; ") for line in cMapF.readlines() if not line.startswith("#")])
-            # To dict
-            cmap = {atom:{"color":color, "definition":definition} for atom, definition, color in cmap}
-
-
-    except FileNotFoundError:
-        raise FileNotFoundError("Color mapping file not found in directory")
-
+    if colorby in ["atom_type","residue_type"]:
+        cmap = "./cmaps/atom_cmap.csv" if colorby=="atom_type" else "./cmaps/res_cmap.csv"
+        
+        # Check for color mapping file, make dict
+        try:
+            with open(cmap,"rt") as cMapF:
+                # Parse color map file
+                cmap  = np.array([line.replace("\n","").split(";") for line in cMapF.readlines() if not line.startswith("#")])
+                # To dict
+                cmap = {code:{"color":color, "definition":definition} for code, definition, color in cmap}
+        except FileNotFoundError:
+            raise FileNotFoundError("Color mapping file not found. Be sure to specify YOURPATH/cmaps/ before the cmap basename.")
+        except ValueError:
+            raise ValueError("Error while parsing cmap file. Check the file's delimeters and compare to examples in cmaps folder")
+    else:
+        cmap = None
+    
     # Run
-    atoms, vor, img = voronoi_atoms(mol, cmap, bs_out=bs_out, size=size, dpi=dpi, alpha=alpha, save_fig=True)
+    atoms, vor, img = voronoi_atoms(mol, cmap, colorby,bs_out=bs_out, size=size, dpi=dpi, alpha=alpha, save_fig=True)
 
     return atoms, vor, img
 
