@@ -267,7 +267,7 @@ def voronoi_atoms(bs, cmap, colorby,bs_out=None, size=None, dpi=None, alpha=0.5,
 def getArgs():
     parser = argparse.ArgumentParser('python')
     parser.add_argument('-mol',   
-                        default="./cmaps/atom_cmap.csv",      
+                        default="./examples/4v94E.mol2",      
                         required = False, 
                         help = 'the protein/ligand mol2 file')
     parser.add_argument('-out',   
