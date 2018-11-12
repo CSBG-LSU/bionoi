@@ -259,16 +259,34 @@ def voronoi_atoms(bs, cmap, colorby,bs_out=None, size=None, dpi=None, alpha=0.5,
 
 def getArgs():
     parser = argparse.ArgumentParser('python')
-    parser.add_argument('-mol',   default="./4v94E.mol2",      required = False, help = 'the protein/ligand mol2 file')
-    parser.add_argument('-cmap',  default="./labels_mol2.csv", required = False, help = 'the cmap file. ')
-    parser.add_argument('-out',   default="./out.jpg",         required = False, help = 'the outpuot image file')
-    parser.add_argument('-dpi',   default="50",               required = False, help = 'image quality in dpi')
-    parser.add_argument('-size',  default="128",               required = False, help = 'image size in pixels, eg: 128')
-    parser.add_argument('-alpha', default="0.5",               required = False, help = 'alpha for color of cells')
+    parser.add_argument('-mol',   
+                        default="./cmaps/atom_cmap.csv",      
+                        required = False, 
+                        help = 'the protein/ligand mol2 file')
+    parser.add_argument('-out',   
+                        default="./out.jpg",         
+                        required = False, 
+                        help = 'the output image file')
+    parser.add_argument('-dpi',   
+                        default="50",               
+                        required = False, 
+                        help = 'image quality in dpi')
+    parser.add_argument('-size',  default="128",               
+                        required = False, 
+                        help = 'image size in pixels, eg: 128')
+    parser.add_argument('-alpha', 
+                        default="0.5",               
+                        required = False, 
+                        help = 'alpha for color of cells')
+    parser.add_argument('-colorby', 
+                        default="atom_type",  
+                        choices=["atom_type","residue_type","residue_num"],
+                        required = False, 
+                        help = 'color the voronoi cells according to {atom_type, residue_type, residue_num}')
 
     return parser.parse_args()
 
-def Bionoi(mol, cmap, bs_out, size, dpi, alpha):
+def Bionoi(mol, bs_out, size, dpi, alpha, colorby):
     if colorby in ["atom_type","residue_type"]:
         cmap = "./cmaps/atom_cmap.csv" if colorby=="atom_type" else "./cmaps/res_cmap.csv"
         
@@ -295,7 +313,6 @@ def Bionoi(mol, cmap, bs_out, size, dpi, alpha):
 
 if __name__ == "__main__":
     args = getArgs()
-    atoms, vor, img = Bionoi(args.mol, args.cmap, args.out, args.size, args.dpi, args.alpha)
+    atoms, vor, img = Bionoi(args.mol, args.out, args.size, args.dpi, args.alpha, args.colorby)
     #atoms, vor, img = cProfile.run('Bionoi(args.mol, args.cmap, args.out, args.dpi, args.alpha)')
-
-
+    
