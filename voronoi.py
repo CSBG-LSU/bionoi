@@ -181,7 +181,15 @@ def fig_to_numpy(fig, alpha=1) -> np.ndarray:
 
     return data
 
-def voronoi_atoms(bs, cmap, bs_out=None, size=None, dpi=None, alpha=0.5, save_fig=True, projection=lambda a,b: a/abs(b)**.5 if b!=0 else a):
+from math import sqrt, asin, atan2,log, pi, tan
+def miller(x,y,z):
+    radius = sqrt( x**2 + y**2 + z**2 )
+    latitude = asin( z / radius )
+    longitude = atan2( y, x)
+    lat = 5/4 * log(tan(pi/4 + 2/5 * latitude))
+    return lat, longitude
+
+def voronoi_atoms(bs, cmap, colorby,bs_out=None, size=None, dpi=None, alpha=0.5, save_fig=True, projection=miller):
     # Suppresses warning
     pd.options.mode.chained_assignment = None
 
@@ -189,14 +197,15 @@ def voronoi_atoms(bs, cmap, bs_out=None, size=None, dpi=None, alpha=0.5, save_fi
     mol2 = PandasMol2().read_mol2(bs)
     atoms = mol2.df[['subst_id','subst_name','atom_type', 'atom_name','x','y','z']]
 
-    # See issue #2
+    # Align to principal axis
     trans_coords = alignment(atoms)
     atoms['x'] = trans_coords[:,0]
     atoms['y'] = trans_coords[:,1]
     atoms['z'] = trans_coords[:,2]
+    
     # convert 3D  to 2D
-    atoms["P(x)"] = atoms[['x','y','z']].apply(lambda coord: projection(coord.x,coord.z), axis=1)
-    atoms["P(y)"] = atoms[['x','y','z']].apply(lambda coord: projection(coord.y,coord.z), axis=1)
+    atoms["P(x)"] = atoms[['x','y','z']].apply(lambda coord: projection(coord.x,coord.y,coord.z)[0], axis=1)
+    atoms["P(y)"] = atoms[['x','y','z']].apply(lambda coord: projection(coord.x,coord.y,coord.z)[1], axis=1)
 
     # setting output image size, labels off, set 120 dpi w x h
     size = 128 if size is None else size
