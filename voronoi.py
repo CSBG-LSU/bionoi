@@ -196,6 +196,8 @@ def voronoi_atoms(bs, cmap, colorby,bs_out=None, size=None, dpi=None, alpha=0.5,
     # Read molecules in mol2 format
     mol2 = PandasMol2().read_mol2(bs)
     atoms = mol2.df[['subst_id','subst_name','atom_type', 'atom_name','x','y','z']]
+    atoms.columns = ['res_id','residue_type','atom_type', 'atom_name','x','y','z']
+    atoms['residue_type'] = atoms['residue_type'].apply(lambda x: x[0:3])
 
     # Align to principal axis
     trans_coords = alignment(atoms)
