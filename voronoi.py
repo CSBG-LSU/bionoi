@@ -3,10 +3,14 @@
 from scipy.spatial import Voronoi, voronoi_plot_2d
 import numpy as np
 import pandas as pd
+import os
 import matplotlib
 import sys,os,argparse
 from biopandas.mol2 import PandasMol2
 import matplotlib.pyplot as plt
+from matplotlib import colors as mcolors
+from sklearn.cluster import KMeans
+
 
 # Performance tweaks
 #import cProfile
@@ -16,7 +20,7 @@ def normalize(v):
     """ vector normalization """
     norm = np.linalg.norm(v)
     if norm == 0: 
-       return v
+        return v
     return v / norm
 
 def vrrotvec(a,b):
@@ -75,6 +79,30 @@ def alignment(pocket):
     # axes with the pocket
     transformed_coords = (np.matmul(transformation_matrix,pocket_coords.T)).T
     return transformed_coords
+
+
+def k_different_colors(k:int):
+    colors = dict( **mcolors.CSS4_COLORS)
+
+    rgb = lambda color: mcolors.to_rgba(color)[:3]
+    hsv = lambda color: mcolors.rgb_to_hsv(color)
+
+    col_dict = [(k,rgb(k)) for c,k in colors.items()]
+    X = np.array([j for i,j in col_dict])
+
+    # Perform kmeans on rqb vectors 
+    kmeans = KMeans(n_clusters=k)
+    kmeans = kmeans.fit(X)
+    # Getting the cluster labels
+    labels = kmeans.predict(X)
+    # Centroid values
+    C = kmeans.cluster_centers_
+    
+    # Find one color near each of the k cluster centers 
+    closest_colors = np.array([ np.sum((X - C[i])**2, axis=1) for i in range(C.shape[0])])
+    keys = sorted(closest_colors.argmin(axis=1))
+    
+    return [col_dict[i][0] for i in keys]
 
 def voronoi_finite_polygons_2d(vor, radius=None):
     """
@@ -199,16 +227,18 @@ def voronoi_atoms(bs, cmap, colorby,bs_out=None, size=None, dpi=None, alpha=0.5,
     atoms.columns = ['res_id','residue_type','atom_type', 'atom_name','x','y','z']
     atoms['residue_type'] = atoms['residue_type'].apply(lambda x: x[0:3])
 
-    # Align to principal axis
+    # Align to principal Axis
+    
     trans_coords = alignment(atoms)
     atoms['x'] = trans_coords[:,0]
     atoms['y'] = trans_coords[:,1]
     atoms['z'] = trans_coords[:,2]
     
+    
     # convert 3D  to 2D
     atoms["P(x)"] = atoms[['x','y','z']].apply(lambda coord: projection(coord.x,coord.y,coord.z)[0], axis=1)
     atoms["P(y)"] = atoms[['x','y','z']].apply(lambda coord: projection(coord.x,coord.y,coord.z)[1], axis=1)
-
+    
     # setting output image size, labels off, set 120 dpi w x h
     size = 128 if size is None else size
     dpi = 120 if dpi is None else dpi
@@ -227,10 +257,10 @@ def voronoi_atoms(bs, cmap, colorby,bs_out=None, size=None, dpi=None, alpha=0.5,
         polygon = vertices[reg]
         polygons.append(polygon)
     atoms.loc[:,'polygons'] = polygons
-
+    
     # Check alpha
     alpha=float(alpha)
-
+    
     # Color by colorby 
     if colorby in ["atom_type","residue_type"]:
         colors = [cmap[_type]["color"] for _type in atoms[colorby]]
@@ -246,9 +276,12 @@ def voronoi_atoms(bs, cmap, colorby,bs_out=None, size=None, dpi=None, alpha=0.5,
         colored_cell = matplotlib.patches.Polygon(row["polygons"],
                                         facecolor = row['color'],
                                         edgecolor = 'black',
-                                        alpha = alpha  )
+                                        alpha = alpha  ,
+                                        linewidth=.1)
         ax.add_patch(colored_cell)
-    atoms.loc[:,"color"] = colors
+    
+        
+    #atoms.loc[:,"color"] = colors
 
     ax.set_xlim(vor.min_bound[0] , vor.max_bound[0])
     ax.set_ylim(vor.min_bound[1] , vor.max_bound[1] )
@@ -297,7 +330,7 @@ def getArgs():
 
 def Bionoi(mol, bs_out, size, dpi, alpha, colorby):
     if colorby in ["atom_type","residue_type"]:
-        cmap = "./cmaps/atom_cmap.csv" if colorby=="atom_type" else "./cmaps/res_cmap.csv"
+        cmap = "./cmaps/atom_cmap.csv" if colorby=="atom_type" else "./cmaps/res_hydro_cmap.csv"
         
         # Check for color mapping file, make dict
         try:
@@ -323,5 +356,6 @@ def Bionoi(mol, bs_out, size, dpi, alpha, colorby):
 if __name__ == "__main__":
     args = getArgs()
     atoms, vor, img = Bionoi(args.mol, args.out, args.size, args.dpi, args.alpha, args.colorby)
-    #atoms, vor, img = cProfile.run('Bionoi(args.mol, args.cmap, args.out, args.dpi, args.alpha)')
+    #atoms, vor, img = cProfile.run('Bionoi(args.mol,  args.out, args.dpi, args.alpha)')
+    
     
