@@ -10,6 +10,7 @@ from biopandas.mol2 import PandasMol2
 import matplotlib.pyplot as plt
 from matplotlib import colors as mcolors
 from sklearn.cluster import KMeans
+from pickle import dump
 
 
 # Performance tweaks
@@ -217,7 +218,7 @@ def miller(x,y,z):
     lat = 5/4 * log(tan(pi/4 + 2/5 * latitude))
     return lat, longitude
 
-def voronoi_atoms(bs, cmap, colorby,bs_out=None, size=None, dpi=None, alpha=0.5, save_fig=True, projection=miller):
+def voronoi_atoms(bs, cmap, colorby,bs_out=None, size=None, dpi=None, alpha=0.5, save_fig=True, projection=miller, pickle=None):
     # Suppresses warning
     pd.options.mode.chained_assignment = None
 
@@ -286,16 +287,24 @@ def voronoi_atoms(bs, cmap, colorby,bs_out=None, size=None, dpi=None, alpha=0.5,
     ax.set_xlim(vor.min_bound[0] , vor.max_bound[0])
     ax.set_ylim(vor.min_bound[1] , vor.max_bound[1] )
 
-    # Output image saving in any format; default jpg
-    bs_out = 'out.jpg' if bs_out is None else bs_out
+    
 
     # Get image as numpy array
     figure.tight_layout(pad=0)
     img = fig_to_numpy(figure, alpha=alpha)
 
     if save_fig:
+        # Output image saving in any format; default jpg
+        bs_out = 'out.jpg' if bs_out is None else bs_out
+        
         plt.subplots_adjust(bottom=0, top=1, left=0, right=1)
         plt.savefig(bs_out, frameon=False, pad_inches=False)
+    
+    if pickle:
+        with open(pickle,"wb") as f:
+            dump([atoms, vor],f)
+
+    plt.close()
 
     return atoms, vor, img
 
@@ -325,10 +334,18 @@ def getArgs():
                         choices=["atom_type","residue_type","residue_num"],
                         required = False, 
                         help = 'color the voronoi cells according to {atom_type, residue_type, residue_num}')
+    parser.add_argument('-pickle',   
+                        default=None,         
+                        required = False, 
+                        help =  '''Supply the name of the output pickle file (a \'.pkl\').        
+                        The pickle will have: 
+                        [0] The pandas.DataFrame named \'atoms\' with atom data.                                                
+                        [1] The scipy.spatial.qhull.Voronoi object.  ''')
 
+    
     return parser.parse_args()
 
-def Bionoi(mol, bs_out, size, dpi, alpha, colorby):
+def Bionoi(mol, bs_out, size, dpi, alpha, colorby, pickle):
     if colorby in ["atom_type","residue_type"]:
         cmap = "./cmaps/atom_cmap.csv" if colorby=="atom_type" else "./cmaps/res_hydro_cmap.csv"
         
@@ -347,7 +364,7 @@ def Bionoi(mol, bs_out, size, dpi, alpha, colorby):
         cmap = None
     
     # Run
-    atoms, vor, img = voronoi_atoms(mol, cmap, colorby,bs_out=bs_out, size=size, dpi=dpi, alpha=alpha, save_fig=True)
+    atoms, vor, img = voronoi_atoms(mol, cmap, colorby,bs_out=bs_out, size=size, dpi=dpi, alpha=alpha, save_fig=True, pickle=pickle)
 
     return atoms, vor, img
 
@@ -355,7 +372,7 @@ def Bionoi(mol, bs_out, size, dpi, alpha, colorby):
 
 if __name__ == "__main__":
     args = getArgs()
-    atoms, vor, img = Bionoi(args.mol, args.out, args.size, args.dpi, args.alpha, args.colorby)
+    atoms, vor, img = Bionoi(args.mol, args.out, args.size, args.dpi, args.alpha, args.colorby, args.pickle)
     #atoms, vor, img = cProfile.run('Bionoi(args.mol,  args.out, args.dpi, args.alpha)')
     
     
