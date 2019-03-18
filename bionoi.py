@@ -9,7 +9,7 @@ from matplotlib import colors as mcolors
 from sklearn.cluster import KMeans
 from math import sqrt, asin, atan2, log, pi, tan
 
-from project_mult_Dirction import *
+from alignment import *
 
 
 def k_different_colors(k: int):
