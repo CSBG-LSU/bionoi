@@ -9,12 +9,7 @@ from matplotlib import colors as mcolors
 from sklearn.cluster import KMeans
 from math import sqrt, asin, atan2, log, pi, tan
 
-from project_mult_Dirction import xoy_positive_proj
-from project_mult_Dirction import xoy_negative_proj
-from project_mult_Dirction import yoz_positive_proj
-from project_mult_Dirction import yoz_negative_proj
-from project_mult_Dirction import zox_positive_proj
-from project_mult_Dirction import zox_negative_proj
+from project_mult_Dirction import *
 
 
 def k_different_colors(k: int):
