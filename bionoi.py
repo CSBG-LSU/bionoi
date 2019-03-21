@@ -9,7 +9,7 @@ from matplotlib import colors as mcolors
 from sklearn.cluster import KMeans
 from math import sqrt, asin, atan2, log, pi, tan
 
-from alignment import *
+from alignment import align
 
 
 def k_different_colors(k: int):
@@ -150,12 +150,10 @@ def miller(x, y, z):
     lat = 5 / 4 * log(tan(pi / 4 + 2 / 5 * latitude))
     return lat, longitude
 
-"""
-return transformation coordinates(matrix: X*3) 
-Principal Axes Alignment
-"""
-def alignment(pocket, proDirct):
 
+def alignment(pocket, proj_direction):
+    """Principal Axes Alignment
+    Returns transformation coordinates(matrix: X*3)"""
     pocket_coords = np.array([pocket.x, pocket.y, pocket.z]).T
     pocket_center = np.mean(pocket_coords, axis=0)  # calculate mean of each column
     pocket_coords = pocket_coords - pocket_center   # Centralization
@@ -164,27 +162,14 @@ def alignment(pocket, proDirct):
     sorted_index = np.argsort(e_values)[::-1]       # sort eigenvalues (increase)and reverse (decrease)
     sorted_vectors = e_vectors[:, sorted_index]
 
-    if proDirct == 1:
-        transformation_matrix = xoy_positive_proj(sorted_vectors)
-    elif proDirct == 2:
-        transformation_matrix = xoy_negative_proj(sorted_vectors)
-    elif proDirct == 3:
-        transformation_matrix = yoz_positive_proj(sorted_vectors)
-    elif proDirct == 4:
-        transformation_matrix = yoz_negative_proj(sorted_vectors)
-    elif proDirct == 5:
-        transformation_matrix = zox_positive_proj(sorted_vectors)
-    elif proDirct == 6:
-        transformation_matrix = zox_negative_proj(sorted_vectors)
-
+    transformation_matrix = align(sorted_vectors, proj_direction)
     transformed_coords = (np.matmul(transformation_matrix, pocket_coords.T)).T
-    # transformed_coords = (transformation_matrix.dot(pocket_coords.T)).T
 
     return transformed_coords
 
 
-def voronoi_atoms(bs, cmap, colorby, bs_out=None, size=None, dpi=None, alpha=1, save_fig=True,
-                    projection=miller, proDirct=None):
+def voronoi_atoms(bs, color_map, colorby, bs_out=None, size=None, dpi=None, alpha=1, save_fig=True,
+                    projection=miller, proj_direction=None):
     # Suppresses warning
     pd.options.mode.chained_assignment = None
 
@@ -195,7 +180,7 @@ def voronoi_atoms(bs, cmap, colorby, bs_out=None, size=None, dpi=None, alpha=1, 
     atoms['residue_type'] = atoms['residue_type'].apply(lambda x: x[0:3])
 
     # Align to principal Axis
-    trans_coords = alignment(atoms, proDirct)  # get the transformation coordinate
+    trans_coords = alignment(atoms, proj_direction)  # get the transformation coordinate
     atoms['x'] = trans_coords[:, 0]
     atoms['y'] = trans_coords[:, 1]
     atoms['z'] = trans_coords[:, 2]
@@ -209,9 +194,9 @@ def voronoi_atoms(bs, cmap, colorby, bs_out=None, size=None, dpi=None, alpha=1, 
     dpi = 120 if dpi is None else dpi
 
     figure = plt.figure(figsize=(int(size) / int(dpi), int(size) / int(dpi)), dpi=int(dpi))
+    
     # figsize is in inches, dpi is the resolution of the figure
-    ax = plt.subplot(111)
-    # default is (111)
+    ax = plt.subplot(111) # default is (111)
 
     ax.axis('off')
     ax.tick_params(axis='both', bottom=False, left=False, right=False,
@@ -232,11 +217,11 @@ def voronoi_atoms(bs, cmap, colorby, bs_out=None, size=None, dpi=None, alpha=1, 
 
     # Color by colorby
     if colorby in ["atom_type", "residue_type"]:
-        colors = [cmap[_type]["color"] for _type in atoms[colorby]]
+        colors = [color_map[_type]["color"] for _type in atoms[colorby]]
     elif colorby == "residue_num":
-        cmap = k_different_colors(len(set(atoms["res_id"])))
-        cmap = {res_num: color for res_num, color in zip(set(atoms["res_id"]), cmap)}
-        colors = atoms["res_id"].apply(lambda x: cmap[x])
+        color_map = k_different_colors(len(set(atoms["res_id"])))
+        color_map = {res_num: color for res_num, color in zip(set(atoms["res_id"]), color_map)}
+        colors = atoms["res_id"].apply(lambda x: color_map[x])
     else:
         raise ValueError
     atoms["color"] = colors
@@ -249,8 +234,7 @@ def voronoi_atoms(bs, cmap, colorby, bs_out=None, size=None, dpi=None, alpha=1, 
                                                   linewidth=0.2)
         ax.add_patch(colored_cell)
 
-    # atoms.loc[:,"color"] = colors
-
+    # Set limits
     ax.set_xlim(vor.min_bound[0], vor.max_bound[0])
     ax.set_ylim(vor.min_bound[1], vor.max_bound[1])
 
@@ -268,44 +252,34 @@ def voronoi_atoms(bs, cmap, colorby, bs_out=None, size=None, dpi=None, alpha=1, 
     return atoms, vor, img
 
 
-"""
-atoms, vor, img = Bionoi(args.mol, args.out, args.size, args.dpi, args.alpha, args.colorby,
-                         args.proDirect,
-                         args.rotAngle2D,
-                         args.flip,
-                         args.trainPercent,
-                         args.validatePercent,
-                         args.testPercent)
-"""
-
-
-def Bionoi(mol, bs_out, size, dpi, alpha, colorby, proDirct):
+def Bionoi(mol, bs_out, size, dpi, alpha, colorby, proj_direction):
     if colorby in ["atom_type", "residue_type"]:
-        cmap = "./cmaps/atom_cmap.csv" if colorby == "atom_type" else "./cmaps/res_hydro_cmap.csv"
+        color_map = "./cmaps/atom_cmap.csv" if colorby == "atom_type" else "./cmaps/res_hydro_cmap.csv"
 
         # Check for color mapping file, make dict
         try:
-            with open(cmap, "rt") as cMapF:
+            with open(color_map, "rt") as color_mapF:
                 # Parse color map file
-                cmap = np.array(
-                    [line.replace("\n", "").split(";") for line in cMapF.readlines() if not line.startswith("#")])
+                color_map = np.array(
+                    [line.replace("\n", "").split(";") for line in color_mapF.readlines() if not line.startswith("#")])
                 # To dict
-                cmap = {code: {"color": color, "definition": definition} for code, definition, color in cmap}
+                color_map = {code: {"color": color, "definition": definition} for code, definition, color in color_map}
         except FileNotFoundError:
             raise FileNotFoundError(
-                "Color mapping file not found. Be sure to specify YOURPATH/cmaps/ before the cmap basename.")
+                "Color mapping file not found. Be sure to specify YOURPATH/color_maps/ before the color_map basename.")
         except ValueError:
             raise ValueError(
-                "Error while parsing cmap file. Check the file's delimeters and compare to examples in cmaps folder")
+                "Error while parsing color_map file. Check the file's delimiters and \
+                compare to examples in color_maps folder")
     else:
-        cmap = None
+        color_map = None
 
     # Run
-    atoms, vor, img = voronoi_atoms(mol, cmap, colorby,
+    atoms, vor, img = voronoi_atoms(mol, color_map, colorby,
                                     bs_out=bs_out,
                                     size=size, dpi=dpi,
                                     alpha=alpha,
                                     save_fig=False,
-                                    proDirct=proDirct)
+                                    proj_direction=proj_direction)
 
     return atoms, vor, img

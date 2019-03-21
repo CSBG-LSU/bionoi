@@ -2,19 +2,17 @@ import numpy as np
 
 
 def normalize(v):
-    """ vector normalization """
+    """Vector normalization """
     norm = np.linalg.norm(v)
     if norm == 0:
         return v
     return v / norm
 
 
-"""
-return rotation axis and rotation angle 
-"""
 def vrrotvec(a, b):
-    """ Function to rotate one vector to another, inspired by
-    vrrotvec.m in MATLAB """
+    """Function to rotate one vector to another. Inspired by
+    vrrotvec.m in MATLAB.
+    Returns rotation axis and rotation angle """
     a = normalize(a)
     b = normalize(b)
     ax = normalize(np.cross(a, b))
@@ -30,12 +28,10 @@ def vrrotvec(a, b):
     return r
 
 
-""" 
-get transformation matrix 
-"""
 def vrrotvec2mat(r):
-    """ Convert the axis-angle representation to the matrix representation of the
-    rotation """
+    """Convert the axis-angle representation to the matrix representation of the
+    rotation.
+    Returns transformation matrix."""
     s = np.sin(r[3])
     c = np.cos(r[3])
     t = 1 - c
@@ -52,6 +48,62 @@ def vrrotvec2mat(r):
          [t * x * z - s * y, t * y * z + s * x, t * z * z + c]]
     )
     return m
+
+
+def align_by_axis(sorted_vectors, *axes):
+    """
+    Parameters
+    ----------
+    sorted_vectors
+    axes
+
+    Returns
+    -------
+
+    """
+
+    # Generate names of axes
+    bases = {"x": [1, 0, 0], "y": [0, 1, 0], "z": [0, 0, 1]}
+    tmp = dict()
+    for key, ax in bases.items():
+        tmp["-" + key] = [i * -1 for i in ax]
+    bases = {**bases, **tmp}
+
+    # Align the first principal axes
+    rot1 = vrrotvec(np.array(bases[axes[0]]), sorted_vectors[:, 0])  # return rotation axis and rotation angle
+    rmat1 = vrrotvec2mat(rot1)                # return rotation matrix (from principal axis to [1,0,0])
+    pa1 = np.matmul(rmat1.T, sorted_vectors)  # then, apply the rotation
+
+    # Align the second principal axes
+    rot2 = vrrotvec(np.array(bases[axes[1]]), pa1[:, 1])
+    rmat2 = vrrotvec2mat(rot2)
+    pa2 = np.matmul(rmat2.T, rmat1.T)
+
+    # Align the third principal axes
+    rot3 = vrrotvec(np.array(bases[axes[2]]), pa2[:, 2])
+    rmat3 = vrrotvec2mat(rot3)
+
+    # We get the total transformation matrix
+    transformation_matrix = np.matmul(rmat3.T, rmat2.T)
+
+    return transformation_matrix
+
+
+def align(sorted_vectors, proj_direction):
+    transformation_matrix = None
+    if proj_direction == 1:
+        transformation_matrix = xoy_positive_proj(sorted_vectors)
+    elif proj_direction == 2:
+        transformation_matrix = xoy_negative_proj(sorted_vectors)
+    elif proj_direction == 3:
+        transformation_matrix = yoz_positive_proj(sorted_vectors)
+    elif proj_direction == 4:
+        transformation_matrix = yoz_negative_proj(sorted_vectors)
+    elif proj_direction == 5:
+        transformation_matrix = zox_positive_proj(sorted_vectors)
+    elif proj_direction == 6:
+        transformation_matrix = zox_negative_proj(sorted_vectors)
+    return transformation_matrix
 
 
 def xoy_positive_proj(sorted_vectors):
