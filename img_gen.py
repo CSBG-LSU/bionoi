@@ -1,5 +1,5 @@
 '''
-    Take the .mol2 files and generate 48 images for each of them.
+Take the .mol2 files and generate 48 images for each of them.
 '''
 import argparse
 from bionoi import Bionoi
@@ -263,6 +263,11 @@ def gen_48_control_vs_heme_cv(k):
         gen_48(sourceFolder='../control_vs_heme_mols_cv/'+cvFoder+'/train/heme/',targetFolder='../control_vs_heme_cv/'+cvFoder+'/train/heme/')
         gen_48(sourceFolder='../control_vs_heme_mols_cv/'+cvFoder+'/val/control/',targetFolder='../control_vs_heme_cv/'+cvFoder+'/val/control/')
         gen_48(sourceFolder='../control_vs_heme_mols_cv/'+cvFoder+'/val/heme/',targetFolder='../control_vs_heme_cv/'+cvFoder+'/val/heme/')
+
+# generate images for bionoi autoencoder. All the images will be in one single folder
+def gen_48_bionoi_autoencoder():
+    gen_48(sourceFolder='../bae-data-mol2/',targetFolder='../bae-data-images/')
+
 #-----------------------------------------------------------------------------------
 if __name__ == "__main__":
     args = getArgs()
@@ -276,5 +281,7 @@ if __name__ == "__main__":
         gen_48_control_vs_nucleotide_cv(10)
     elif opMode == 'control_vs_heme_cv':
         gen_48_control_vs_heme_cv(10)
+    elif opMode == 'bionoi_autoencoder':
+        gen_48_bionoi_autoencoder()
     else:
         print('error: invalid value of opMode.')

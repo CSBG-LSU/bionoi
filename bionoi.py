@@ -249,6 +249,8 @@ def voronoi_atoms(bs, color_map, colorby, bs_out=None, size=None, dpi=None, alph
         plt.subplots_adjust(bottom=0, top=1, left=0, right=1)
         plt.savefig(bs_out, frameon=False, pad_inches=False)
 
+    plt.close(fig=figure)
+
     return atoms, vor, img
 
 
