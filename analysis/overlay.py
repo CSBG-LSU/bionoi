@@ -1,10 +1,10 @@
 from scipy.spatial import cKDTree
-from scipy.spatial import Voronoi
-from collections import defaultdict 
+from collections import defaultdict
 import numpy as np
 import argparse
 from pickle import load, dump
 import pandas as pd
+
 
 def sumCells(vor, heatmap):
     # Generate all points to loop through 
@@ -33,30 +33,71 @@ def merge(cellsum, atomsdf):
     return pd.merge(atomsdf, sums, left_index=True, right_index=True)
 
 
+def unpack_dict(data_dict):
+    atoms = data_dict['atoms']
+    vor = data_dict['vor']
+    saliencyMap = data_dict['saliencyMap']  # the heatmap
+    trueClass = data_dict['trueClass']  # the real class of this mol
+    predClass = data_dict['predClass']  # the predicted class of this mol
+    return atoms, vor, saliencyMap, trueClass, predClass
+
+
+def unpack_pkl(pklFile):
+    with open(pklFile, 'rb') as f:
+        data_dict = load(f)
+    dict_xoy_p = data_dict['xoy_+']
+    dict_xoy_n = data_dict['xoy_-']
+    dict_yoz_p = data_dict['yoz_+']
+    dict_yoz_n = data_dict['yoz_-']
+    dict_zox_p = data_dict['zox_+']
+    dict_zox_n = data_dict['zox_-']
+    info_xoy_p = unpack_dict(dict_xoy_p)
+    info_xoy_n = unpack_dict(dict_xoy_n)
+    info_yoz_p = unpack_dict(dict_yoz_p)
+    info_yoz_n = unpack_dict(dict_yoz_n)
+    info_zox_p = unpack_dict(dict_zox_p)
+    info_zox_n = unpack_dict(dict_zox_n)
+    return info_xoy_p, info_xoy_n, info_yoz_p, info_yoz_n, info_zox_p, info_zox_n
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser('python')
     parser.add_argument('-pickle',   
                         required = True, 
                         help='pickle object from Bionoi')
-    parser.add_argument('-heatmap',   
-                        required=True,
-                        help='the heatmap as pickled numpy array ')
     parser.add_argument('-out',   
-                        required = True, 
+                        required = True,
                         help='path to output pickle (ends in \'.pkl\')')
     
     args = parser.parse_args()
-    
-    with open(args.pickle, "rb") as pkl:
-        atoms, voronoi = load(pkl)
-    with open(args.heatmap, "rb") as pkl:
-        heatmap = load(pkl)
-    
-    s = sumCells(voronoi, heatmap)
-    out = merge(s, atoms)
-    
+
+    with open(args.pickle, 'rb') as f:
+        data_dict = load(f)
+
+    # Loop through atoms dataframes, sum their cells, then add Cell Sum column to merged_df
+    merged_df = data_dict["xoy_+"]["atoms"].drop(labels=["P(x)", "P(y)", "polygons", "color"], axis=1)
+    for key, val in data_dict.items():
+        # Get variables
+        atoms = val['atoms']
+        vor = val['vor']
+        heatmap = val['saliencyMap']
+
+        # Dropping prevents build up of column space
+        atoms = atoms.drop(labels=["P(x)", "P(y)", "polygons", "color"], axis=1)
+
+        # Sum and store
+        s = sumCells(vor, heatmap)
+        tmp_df = merge(s, atoms)
+
+        # Warning : this merging assumes that the different DataFrames are ordered exactly the same
+        # TODO : Merge by column instead of adding new column
+        merged_df["Cell Sum %s" % key] = tmp_df["Cell Sum"]
+
+    # Sum the cells by atom
+    final = merged_df.copy()
+    final["total"] = merged_df[[col for col in merged_df.columns if col.startswith("Cell Sum")]].sum(axis=1)
+    final = final.drop([col for col in final.columns if col.startswith("Cell Sum")], axis=1)
+    final = final.sort_values("total", ascending=False)
+
     with open(args.out, "wb") as pkl:
-        dump(out, pkl)
-    
-    
-    
+        dump(final, pkl)
