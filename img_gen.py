@@ -264,6 +264,25 @@ def gen_48_control_vs_heme_cv(k):
         gen_48(sourceFolder='../control_vs_heme_mols_cv/'+cvFoder+'/val/control/',targetFolder='../control_vs_heme_cv/'+cvFoder+'/val/control/')
         gen_48(sourceFolder='../control_vs_heme_mols_cv/'+cvFoder+'/val/heme/',targetFolder='../control_vs_heme_cv/'+cvFoder+'/val/heme/')
 
+# generate images for heme_vs_nucleotide
+def gen_48_heme_vs_nucleotide():
+    gen_48(sourceFolder='../heme_vs_nucleotide_mols/train/heme/',targetFolder='../heme_vs_nucleotide/train/heme/')
+    gen_48(sourceFolder='../heme_vs_nucleotide_mols/train/nucleotide/',targetFolder='../heme_vs_nucleotide/train/nucleotide/')
+    gen_48(sourceFolder='../heme_vs_nucleotide_mols/val/heme/',targetFolder='../heme_vs_nucleotide/val/heme/')
+    gen_48(sourceFolder='../heme_vs_nucleotide_mols/val/nucleotide/',targetFolder='../heme_vs_nucleotide/val/nucleotide/')
+    gen_48(sourceFolder='../heme_vs_nucleotide_mols/test/heme/',targetFolder='../heme_vs_nucleotide/test/heme/')
+    gen_48(sourceFolder='../heme_vs_nucleotide_mols/test/nucleotide/',targetFolder='../heme_vs_nucleotide/test/nucleotide/')
+
+# generate images for heme_vs_nucleotide for 10-fold cross-validation
+def gen_48_heme_vs_nucleotide_cv(k):
+    for i in range(k):
+        # from 0 to 9, folder from 1 to 10
+        cvFoder = 'cv'+str(i+1)
+        gen_48(sourceFolder='../heme_vs_nucleotide_mols_cv/'+cvFoder+'/train/0-heme/',targetFolder='../heme_vs_nucleotide_cv/'+cvFoder+'/train/0-heme/')
+        gen_48(sourceFolder='../heme_vs_nucleotide_mols_cv/'+cvFoder+'/train/1-nucleotide/',targetFolder='../heme_vs_nucleotide_cv/'+cvFoder+'/train/1-nucleotide/')
+        gen_48(sourceFolder='../heme_vs_nucleotide_mols_cv/'+cvFoder+'/val/0-heme/',targetFolder='../heme_vs_nucleotide_cv/'+cvFoder+'/val/0-heme/')
+        gen_48(sourceFolder='../heme_vs_nucleotide_mols_cv/'+cvFoder+'/val/1-nucleotide/',targetFolder='../heme_vs_nucleotide_cv/'+cvFoder+'/val/1-nucleotide/')
+
 # generate images for bionoi autoencoder. All the images will be in one single folder
 def gen_48_bionoi_autoencoder():
     gen_48(sourceFolder='../bae-data-mol2/',targetFolder='../bae-data-images/')
@@ -281,6 +300,10 @@ if __name__ == "__main__":
         gen_48_control_vs_nucleotide_cv(10)
     elif opMode == 'control_vs_heme_cv':
         gen_48_control_vs_heme_cv(10)
+    elif opMode == 'heme_vs_nucleotide':
+        gen_48_heme_vs_nucleotide()
+    elif opMode == 'heme_vs_nucleotide_cv':
+        gen_48_heme_vs_nucleotide_cv(10)
     elif opMode == 'bionoi_autoencoder':
         gen_48_bionoi_autoencoder()
     else:

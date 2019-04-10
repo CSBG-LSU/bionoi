@@ -1,6 +1,6 @@
-'''
-    Split the target folder to perform k-fold cross-validation
-'''
+"""
+Split the data in a k-fold cross validation manner for binary classification.
+"""
 import numpy as np
 import os
 import sys
@@ -8,28 +8,6 @@ import argparse
 from os import listdir
 from os.path import isfile, join
 from shutil import copyfile
-
-def getArgs():
-    parser = argparse.ArgumentParser('python')
-    parser.add_argument('-k',
-                        type=int,
-                        default=10,
-                        required=False,
-                        help='number of folds')
-    parser.add_argument('-opMode',
-                        default='control_vs_heme',
-                        required=False,
-                        help='operation mode, control_vs_heme or control_vs_nucleotide')
-    parser.add_argument('-sourceFolder',
-                        default='../mols_extract/',
-                        required=False,
-                        help='source .mol2 folder path')
-    parser.add_argument('-targetFolder',
-                        default='../mols_extract_cv/',
-                        required=False,
-                        help='target .mol2 folder path for cross-validation')
-    return parser.parse_args()
-
 # save the splitted datasets to folders
 def saveToFolder(fileCollection, sourceFolder, targetFolder):
     m = len(fileCollection)
@@ -38,9 +16,9 @@ def saveToFolder(fileCollection, sourceFolder, targetFolder):
         target = targetFolder + '/' + fileCollection[i]
         copyfile(source, target)
 
-def split2CVFolder(k, sourceFolder, targetFolder, type):
+def split2CVFolder(k, sourceFolder, targetFolder, type, type_num):
     """
-    type: 'control/', 'heme/', 'nucleotide/' or 'steroid/'
+    type: 'cats/', 'dogs/' or 'control'
     """
     sourceFolder = sourceFolder + type
 
@@ -58,6 +36,9 @@ def split2CVFolder(k, sourceFolder, targetFolder, type):
     print('lenth of val data:', lenVal)
     lenTrain = m - lenVal
     print('length of train data:',lenTrain)
+
+    # put cats and dogs in class 1 and control in class 0
+    type = type_num + '-' + type
 
     # split the collection in a k-fold cross validation manner
     for i in range (k):
@@ -82,23 +63,19 @@ def split2CVFolder(k, sourceFolder, targetFolder, type):
         print('-------------------------------------')
 
 if __name__ == "__main__":
-    args = getArgs()
-    k = args.k
-    opMode = args.opMode
-    sourceFolder = args.sourceFolder
-    targetFolder = args.targetFolder
-    if not os.path.exists(targetFolder):
-        os.makedirs(targetFolder)
-    if opMode == 'control_vs_heme':
-        split2CVFolder(k,sourceFolder,targetFolder,type = '/control')
-        split2CVFolder(k,sourceFolder,targetFolder,type = '/heme')
-    elif opMode == 'control_vs_nucleotide':
-        split2CVFolder(k,sourceFolder,targetFolder,type = '/control')
-        split2CVFolder(k,sourceFolder,targetFolder,type = '/nucleotide')
-    else:
-        print('error: invalid opMode')
+    k = 10
+    src_dir = '../mols_extract/'
 
-    #split2CVFolder(k,sourceFolder,targetFolder,type = '/control')
-    #split2CVFolder(k,sourceFolder,targetFolder,type = '/heme')
-    #split2CVFolder(k,sourceFolder,targetFolder,type = '/nucleotide')
-    #split2CVFolder(k,sourceFolder,targetFolder,type = '/steroid')
+    #dst_dir = './cats_vs_control_cv/'
+    #dst_dir = './dogs_vs_control_cv/'
+    dst_dir = '../heme_vs_nucleotide_mols_cv/'
+    if not os.path.exists(dst_dir):
+        os.makedirs(dst_dir)
+    
+    #target_type = 'cats/'
+    #target_type = 'dogs/'
+
+    #split2CVFolder(k,src_dir,dst_dir,'control/')
+    #split2CVFolder(k,src_dir,dst_dir,target_type)
+    split2CVFolder(k, src_dir, dst_dir, 'heme/', '0')
+    split2CVFolder(k, src_dir, dst_dir, 'nucleotide/', '1')
