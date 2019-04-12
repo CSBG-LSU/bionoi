@@ -1,7 +1,7 @@
 '''
-    Generating files for finial analysis.
-    mol2Info --- Take source folder's .mol2 files, then generate 2 target folders, one for the pickle files
-    containing 'vor' and 'atoms' objects, one for the images.
+Generating files for finial analysis.
+mol_2_info --- Take source folder's .mol2 files, then generate 2 target folders, one for the pickle files
+containing 'vor' and 'atoms' objects, one for the images.
 '''
 import sys
 import os
@@ -14,7 +14,7 @@ import numpy as np
 from os import listdir
 from os.path import isfile, join
 
-def getArgs():
+def get_args():
     parser = argparse.ArgumentParser('python')
     parser.add_argument('-dpi',
                         default=256,
@@ -39,7 +39,7 @@ def getArgs():
                         help='the type of image {.jpg, .png}')
     return parser.parse_args()
 
-def mol2Info(mol, sourceFolder, targetFolderPkl, targetFolderImg, args):
+def mol_2_info(mol, sourceFolder, targetFolderPkl, targetFolderImg, args):
     """
     mol2File: a path of a sinle .mol2 file as input
     args: input arguments
@@ -86,16 +86,16 @@ def mol2Info(mol, sourceFolder, targetFolderPkl, targetFolderImg, args):
     pickle.dump(dict, pklFile)
 
 
-def mol2InfoFolder(sourceFolder, targetFolderPkl, targetFolderImg, args):
+def mol_2_info_folder(sourceFolder, targetFolderPkl, targetFolderImg, args):
     """
-    Run mol2Info() on entire folder
+    Run mol_2_info() on entire folder
     """
     fileList = [f for f in listdir(sourceFolder) if isfile(join(sourceFolder, f))]
     print('converting {} of files in folder {}'.format(len(fileList),sourceFolder))
     print('pickle files saved in folder {}'.format(targetFolderPkl))
     print('images saved in folder {}'.format(targetFolderImg))
     for mol in fileList:
-        mol2Info(mol, sourceFolder, targetFolderPkl, targetFolderImg, args)
+        mol_2_info(mol, sourceFolder, targetFolderPkl, targetFolderImg, args)
         #print('processed:', mol)
 
 def control_vs_heme_gen(args):
@@ -105,27 +105,27 @@ def control_vs_heme_gen(args):
     sourceFolder = '../control_vs_heme_mols/train/control/'
     targetFolderPkl = '../analyse/mols_pkl/control_vs_heme/train/control/'
     targetFolderImg = '../analyse/images/control_vs_heme/train/control/'
-    mol2InfoFolder(sourceFolder, targetFolderPkl, targetFolderImg, args)
+    mol_2_info_folder(sourceFolder, targetFolderPkl, targetFolderImg, args)
     sourceFolder = '../control_vs_heme_mols/train/heme/'
     targetFolderPkl = '../analyse/mols_pkl/control_vs_heme/train/heme/'
     targetFolderImg = '../analyse/images/control_vs_heme/train/heme/'
-    mol2InfoFolder(sourceFolder, targetFolderPkl, targetFolderImg, args)
+    mol_2_info_folder(sourceFolder, targetFolderPkl, targetFolderImg, args)
     sourceFolder = '../control_vs_heme_mols/val/control/'
     targetFolderPkl = '../analyse/mols_pkl/control_vs_heme/val/control/'
     targetFolderImg = '../analyse/images/control_vs_heme/val/control/'
-    mol2InfoFolder(sourceFolder, targetFolderPkl, targetFolderImg, args)
+    mol_2_info_folder(sourceFolder, targetFolderPkl, targetFolderImg, args)
     sourceFolder = '../control_vs_heme_mols/val/heme/'
     targetFolderPkl = '../analyse/mols_pkl/control_vs_heme/val/heme/'
     targetFolderImg = '../analyse/images/control_vs_heme/val/heme/'
-    mol2InfoFolder(sourceFolder, targetFolderPkl, targetFolderImg, args)
+    mol_2_info_folder(sourceFolder, targetFolderPkl, targetFolderImg, args)
     sourceFolder = '../control_vs_heme_mols/test/control/'
     targetFolderPkl = '../analyse/mols_pkl/control_vs_heme/test/control/'
     targetFolderImg = '../analyse/images/control_vs_heme/test/control/'
-    mol2InfoFolder(sourceFolder, targetFolderPkl, targetFolderImg, args)
+    mol_2_info_folder(sourceFolder, targetFolderPkl, targetFolderImg, args)
     sourceFolder = '../control_vs_heme_mols/test/heme/'
     targetFolderPkl = '../analyse/mols_pkl/control_vs_heme/test/heme/'
     targetFolderImg = '../analyse/images/control_vs_heme/test/heme/'
-    mol2InfoFolder(sourceFolder, targetFolderPkl, targetFolderImg, args)
+    mol_2_info_folder(sourceFolder, targetFolderPkl, targetFolderImg, args)
 
 def control_vs_nucleotide_gen(args):
     """
@@ -134,29 +134,59 @@ def control_vs_nucleotide_gen(args):
     sourceFolder = '../control_vs_nucleotide_mols/train/control/'
     targetFolderPkl = '../analyse/mols_pkl/control_vs_nucleotide/train/control/'
     targetFolderImg = '../analyse/images/control_vs_nucleotide/train/control/'
-    mol2InfoFolder(sourceFolder, targetFolderPkl, targetFolderImg, args)
+    mol_2_info_folder(sourceFolder, targetFolderPkl, targetFolderImg, args)
     sourceFolder = '../control_vs_nucleotide_mols/train/nucleotide/'
     targetFolderPkl = '../analyse/mols_pkl/control_vs_nucleotide/train/nucleotide/'
     targetFolderImg = '../analyse/images/control_vs_nucleotide/train/nucleotide/'
-    mol2InfoFolder(sourceFolder, targetFolderPkl, targetFolderImg, args)
+    mol_2_info_folder(sourceFolder, targetFolderPkl, targetFolderImg, args)
     sourceFolder = '../control_vs_nucleotide_mols/val/control/'
     targetFolderPkl = '../analyse/mols_pkl/control_vs_nucleotide/val/control/'
     targetFolderImg = '../analyse/images/control_vs_nucleotide/val/control/'
-    mol2InfoFolder(sourceFolder, targetFolderPkl, targetFolderImg, args)
+    mol_2_info_folder(sourceFolder, targetFolderPkl, targetFolderImg, args)
     sourceFolder = '../control_vs_nucleotide_mols/val/nucleotide/'
     targetFolderPkl = '../analyse/mols_pkl/control_vs_nucleotide/val/nucleotide/'
     targetFolderImg = '../analyse/images/control_vs_nucleotide/val/nucleotide/'
-    mol2InfoFolder(sourceFolder, targetFolderPkl, targetFolderImg, args)
+    mol_2_info_folder(sourceFolder, targetFolderPkl, targetFolderImg, args)
     sourceFolder = '../control_vs_nucleotide_mols/test/control/'
     targetFolderPkl = '../analyse/mols_pkl/control_vs_nucleotide/test/control/'
     targetFolderImg = '../analyse/images/control_vs_nucleotide/test/control/'
-    mol2InfoFolder(sourceFolder, targetFolderPkl, targetFolderImg, args)
+    mol_2_info_folder(sourceFolder, targetFolderPkl, targetFolderImg, args)
     sourceFolder = '../control_vs_nucleotide_mols/test/nucleotide/'
     targetFolderPkl = '../analyse/mols_pkl/control_vs_nucleotide/test/nucleotide/'
     targetFolderImg = '../analyse/images/control_vs_nucleotide/test/nucleotide/'
-    mol2InfoFolder(sourceFolder, targetFolderPkl, targetFolderImg, args)
+    mol_2_info_folder(sourceFolder, targetFolderPkl, targetFolderImg, args)
+
+def heme_vs_nucleotide_gen(args):
+    """
+    Generate files for heme_vs_nucleotide task.
+    """
+    sourceFolder = '../heme_vs_nucleotide_mols/train/0-heme/'
+    targetFolderPkl = '../analyse/mols_pkl/heme_vs_nucleotide/train/0-heme/'
+    targetFolderImg = '../analyse/images/heme_vs_nucleotide/train/0-heme/'
+    mol_2_info_folder(sourceFolder, targetFolderPkl, targetFolderImg, args)
+    sourceFolder = '../heme_vs_nucleotide_mols/train/1-nucleotide/'
+    targetFolderPkl = '../analyse/mols_pkl/heme_vs_nucleotide/train/1-nucleotide/'
+    targetFolderImg = '../analyse/images/heme_vs_nucleotide/train/1-nucleotide/'
+    mol_2_info_folder(sourceFolder, targetFolderPkl, targetFolderImg, args)
+    sourceFolder = '../heme_vs_nucleotide_mols/val/0-heme/'
+    targetFolderPkl = '../analyse/mols_pkl/heme_vs_nucleotide/val/0-heme/'
+    targetFolderImg = '../analyse/images/heme_vs_nucleotide/val/0-heme/'
+    mol_2_info_folder(sourceFolder, targetFolderPkl, targetFolderImg, args)
+    sourceFolder = '../heme_vs_nucleotide_mols/val/1-nucleotide/'
+    targetFolderPkl = '../analyse/mols_pkl/heme_vs_nucleotide/val/1-nucleotide/'
+    targetFolderImg = '../analyse/images/heme_vs_nucleotide/val/1-nucleotide/'
+    mol_2_info_folder(sourceFolder, targetFolderPkl, targetFolderImg, args)
+    sourceFolder = '../heme_vs_nucleotide_mols/test/0-heme/'
+    targetFolderPkl = '../analyse/mols_pkl/heme_vs_nucleotide/test/0-heme/'
+    targetFolderImg = '../analyse/images/heme_vs_nucleotide/test/0-heme/'
+    mol_2_info_folder(sourceFolder, targetFolderPkl, targetFolderImg, args)
+    sourceFolder = '../heme_vs_nucleotide_mols/test/1-nucleotide/'
+    targetFolderPkl = '../analyse/mols_pkl/heme_vs_nucleotide/test/1-nucleotide/'
+    targetFolderImg = '../analyse/images/heme_vs_nucleotide/test/1-nucleotide/'
+    mol_2_info_folder(sourceFolder, targetFolderPkl, targetFolderImg, args)
 #-----------------------------------------------------------------------------------
 if __name__ == "__main__":
-    args = getArgs()
-    control_vs_heme_gen(args)
-    control_vs_nucleotide_gen(args)
+    args = get_args()
+    #control_vs_heme_gen(args)
+    #control_vs_nucleotide_gen(args)
+    heme_vs_nucleotide_gen(args)
