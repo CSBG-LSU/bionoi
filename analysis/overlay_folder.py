@@ -3,6 +3,7 @@ from scipy.spatial import cKDTree
 from collections import defaultdict
 import numpy as np
 import argparse
+from os import listdir
 from pickle import load, dump
 import pandas as pd
 
@@ -106,21 +107,43 @@ def overlay_single(in_dir, out_dir, pickle_name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser('python')
+    parser.add_argument('-op',   
+                        required = False,
+                        default = 'control_vs_heme',
+                        choices = ['control_vs_heme', 'control_vs_nucleotide', 'heme_vs_nucleotide'],
+                        help='operation modes')    
     parser.add_argument('-in_dir',   
                         required = False,
-                        default = '../../analyse/combine_pickle/control_vs_heme/test/heme/',
+                        default = '../../analyse/combine_pickle/',
                         help='input directory')
     parser.add_argument('-out_dir',   
                         required = False,
-                        default = '../../analyse/final_scores/control_vs_heme/test/heme/',
+                        default = '../../analyse/final_scores/',
                         help='output directory')
     args = parser.parse_args()
+    op = args.op
     in_dir = args.in_dir
     out_dir = args.out_dir
 
-    pickle_name = '1akkA00-1.pickle'
-    overlay_single(in_dir, out_dir, pickle_name)
-    pickle_name = '1bbhA00-1.pickle'
-    overlay_single(in_dir, out_dir, pickle_name)
+    tasks = ('train', 'val', 'test')
+    if op == 'control_vs_heme':
+        classes = ('control', 'heme')
+    elif op == 'control_vs_nucleotide':
+        classes = ('control', 'nucleotide')
+    elif op == 'heme_vs_nucleotide':
+        classes = ('heme', 'nucleotide')
+
+    for task in tasks:
+        for type in classes:
+            in_dir_sub = in_dir + op + '/' + task + '/' + type + '/'
+            out_dir_sub = out_dir + op + '/' + task + '/' + type + '/'
+            file_list = [f for f in listdir(in_dir_sub)]
+            for f in file_list:
+                overlay_single(in_dir_sub, out_dir_sub, f)
+
+    #pickle_name = '1akkA00-1.pickle'
+    #overlay_single(in_dir, out_dir, pickle_name)
+    #pickle_name = '1bbhA00-1.pickle'
+    #overlay_single(in_dir, out_dir, pickle_name)
 
 
