@@ -18,18 +18,22 @@ def sumCells(vor, heatmap):
     
     # Sum scores in heatmap for each voronoi cell 
     cells = defaultdict(float)
+    # Calculate number of pixels in region 
+    normalizer = cells.copy()
     for pointi, reg in enumerate(point_regions):
         # Convert point index to i,j pairs from the image 
         # TODO: The '%' conversion might not be perfect arithmetic 
         i, j = pointi//heatmap.shape[0], pointi % heatmap.shape[1]
         
         cells[list(vor.point_region).index(vor.point_region[reg])] += heatmap[i][j]
+        normalizer[list(vor.point_region).index(vor.point_region[reg])] += 1
         
-    return cells
+    return cells, normalizer 
 
 
-def merge(cellsum, atomsdf):
-    sums = pd.DataFrame.from_dict(cellsum, orient='index', columns=["Cell Sum"])
+def merge(cellsum, normalizer, atomsdf):
+    sums=pd.DataFrame.from_dict(cellsum, orient='index', columns=["Cell Sum"])
+    sums["Cell Area"] = normalizer.values()
     return pd.merge(atomsdf, sums, left_index=True, right_index=True)
 
 
@@ -86,17 +90,18 @@ if __name__ == "__main__":
         atoms = atoms.drop(labels=["P(x)", "P(y)", "polygons", "color"], axis=1)
 
         # Sum and store
-        s = sumCells(vor, heatmap)
-        tmp_df = merge(s, atoms)
+        sums, areas = sumCells(vor, heatmap)
+        tmp_df = merge(sums, areas, atoms)
+        tmp_df["Cell Score"] = tmp_df["Cell Sum"] / tmp_df["Cell Area"] 
 
         # Warning : this merging assumes that the different DataFrames are ordered exactly the same
         # TODO : Merge by column instead of adding new column
-        merged_df["Cell Sum %s" % key] = tmp_df["Cell Sum"]
+        merged_df["Cell Score %s" % key] = tmp_df["Cell Score"]
 
     # Sum the cells by atom
     final = merged_df.copy()
-    final["total"] = merged_df[[col for col in merged_df.columns if col.startswith("Cell Sum")]].sum(axis=1)
-    final = final.drop([col for col in final.columns if col.startswith("Cell Sum")], axis=1)
+    final["total"] = merged_df[[col for col in merged_df.columns if col.startswith("Cell Score")]].sum(axis=1)
+    final = final.drop([col for col in final.columns if col.startswith("Cell Score")], axis=1)
     final = final.sort_values("total", ascending=False)
 
     with open(args.out, "wb") as pkl:
