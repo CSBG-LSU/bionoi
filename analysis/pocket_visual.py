@@ -1,21 +1,25 @@
 """
 Copy the scores of atoms and paste into the last column of a .pdb file of a pocket.
+Note that order of atoms are different in the csv file containing scores.
 """
 import os
 import argparse
 import csv
 import pandas as pd
+from biopandas.pdb import PandasPdb
 from shutil import copyfile
+from os import listdir
 
-def pocket_visual_single(pdb_dir, source_pdb, scores_dir, scores, out_dir):
+def pocket_visual_single(pdb_dir, source_pdb, scores_dir, scores_source, out_dir):
     """
     take the source pdb file and its corresponding score, then add the scores 
     to the last column of the pdb file, save it to out_dir.
     """
+    ppdb = PandasPdb()
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)    
     pdb_file = pdb_dir + source_pdb
-    scores_file = scores_dir + scores
+    scores_file = scores_dir + scores_source
     out_file = out_dir + source_pdb
 
     # copy file to out_dir
@@ -24,9 +28,31 @@ def pocket_visual_single(pdb_dir, source_pdb, scores_dir, scores, out_dir):
     # read the scores as a list
     df = pd.read_csv(scores_file)
     scores = df['total']
+    row_nums = df.iloc[:,0]
     #print(scores)
+    #print(row_nums) # row numbers in original pdb file
 
-    # modify the pdb file
+    # modify the copied pdb file
+    pocket = ppdb.read_pdb(out_file)
+    i = 0
+    for row_num in row_nums:
+        ppdb.df['ATOM']['b_factor'][row_num] = scores[i]
+        #print(ppdb.df['ATOM']['b_factor'][row_num])
+        i = i + 1
+    #print(ppdb.df['ATOM']['b_factor'])
+    ppdb.to_pdb(path = out_file)
+
+def pocket_visual_folder(pdb_dir, scores_dir, out_dir):
+    """
+    Apply pocket_visual_folder() function to entire folders of pdb files, and
+    entire folders of corresponding final scores
+    """
+    file_list = [f for f in listdir(scores_dir)]
+    for f in file_list:
+        #print(f.split('-')[0])
+        f_pdb = f.split('-')[0] + '.pdb'
+        #print(f_pdb)
+        pocket_visual_single(pdb_dir, f_pdb, scores_dir, f, out_dir)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser('python')
@@ -76,6 +102,4 @@ if __name__ == "__main__":
         pdb_dir = pdb_dir_nucleotide
         out_dir = out_dir_nucleotide
 
-    source_pdb = '1akkA00.pdb'
-    scores = '1akkA00-1.csv'
-    pocket_visual_single(pdb_dir, source_pdb, final_scores_dir, scores, out_dir)
+    pocket_visual_folder(pdb_dir, final_scores_dir, out_dir)
