@@ -5,6 +5,8 @@ Note that order of atoms are different in the csv file containing scores.
 import os
 import argparse
 import csv
+import pickle
+from pickle import load, dump
 import pandas as pd
 from biopandas.pdb import PandasPdb
 from shutil import copyfile
@@ -42,17 +44,16 @@ def pocket_visual_single(pdb_dir, source_pdb, scores_dir, scores_source, out_dir
     #print(ppdb.df['ATOM']['b_factor'])
     ppdb.to_pdb(path = out_file)
 
-def pocket_visual_folder(pdb_dir, scores_dir, out_dir):
+def pocket_visual_folder(pdb_dir, scores_dir, out_dir, pocket_list):
     """
     Apply pocket_visual_folder() function to entire folders of pdb files, and
     entire folders of corresponding final scores
     """
-    file_list = [f for f in listdir(scores_dir)]
-    for f in file_list:
-        #print(f.split('-')[0])
-        f_pdb = f.split('-')[0] + '.pdb'
+    for f in pocket_list:
+        f_pdb = f + '.pdb'
+        f_score = f + '-1' + '.csv'
         #print(f_pdb)
-        pocket_visual_single(pdb_dir, f_pdb, scores_dir, f, out_dir)
+        pocket_visual_single(pdb_dir, f_pdb, scores_dir, f_score, out_dir)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser('python')
@@ -60,7 +61,11 @@ if __name__ == "__main__":
                         required = False,
                         default = 'control_vs_heme',
                         choices = ['control_vs_heme', 'control_vs_nucleotide'],
-                        help='operation modes')    
+                        help='operation modes')
+    parser.add_argument('-correct_predict_dir',   
+                        required = False,
+                        default = '../../bionoi_transfer_learning/log/',
+                        help='final scores directory for heme')                            
     parser.add_argument('-final_scores_dir_heme',   
                         required = False,
                         default = '../../analyse/final_scores/control_vs_heme/test/heme/',
@@ -87,6 +92,7 @@ if __name__ == "__main__":
                         help='pdb output directory for nucleotide')
     args = parser.parse_args()
     op = args.op
+    correct_predict_dir = args.correct_predict_dir
     final_scores_dir_heme = args.final_scores_dir_heme
     final_scores_dir_nucleotide = args.final_scores_dir_nucleotide
     pdb_dir_heme = args.pdb_dir_heme
@@ -102,4 +108,16 @@ if __name__ == "__main__":
         pdb_dir = pdb_dir_nucleotide
         out_dir = out_dir_nucleotide
 
-    pocket_visual_folder(pdb_dir, final_scores_dir, out_dir)
+    # load the lists of correctly predicted pockets
+    with open(correct_predict_dir + op + '_correct_preds_6_dirs_vote.pickle', 'rb') as f:
+        dict = load(f)
+    #print(dict)
+    class_1_list = dict[1]
+    pocket_list = []
+    for pocket in class_1_list:
+        pocket_list.append(pocket[0])
+    #print(pocket_list)
+    print('total number of correct predictions:', len(pocket_list))
+
+    # modify the pdb file to visualize atoms' scores
+    pocket_visual_folder(pdb_dir, final_scores_dir, out_dir, pocket_list)
