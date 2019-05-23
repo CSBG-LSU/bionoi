@@ -25,7 +25,7 @@ bionoi constructs the [voronoi diagram](https://en.wikipedia.org/wiki/Voronoi_di
 
 * alignment.py: funtions used by bionoi.py to align the molecue to principle axis.
 
-* main.py: main function that can convert a specified mol2 file into Voronoi Diagram. See run options in help.
+* main.py: main function that uses bionoi.py to convert a specified mol2 file into Voronoi Diagram. See run options in help.
 ```
 usage:
 python main.py -mol ./mol/4v94E.mol2 -out ./imgs/ -dpi 120 -alpha 0.5 -size 256 -direction 0 -rot_angle 0 -flip 0
