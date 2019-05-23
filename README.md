@@ -17,9 +17,19 @@ bionoi constructs the [voronoi diagram](https://en.wikipedia.org/wiki/Voronoi_di
 
 1. copy/download the code from GitHub
 2. If input is a 3D coordinate of protein/ligand, it will be projected to 2D plane
-3. Run voronoi.py with a .mol2 file (see Examples)
+3. Run main.py with a .mol2 file (see Examples)
 
 ## File description
+
+* bionoi.py: main function used to convert 3-d molecule to 2-D Voronoi Diagram.  
+
+* alignment.py: funtions used by bionoi.py to align the molecue to principle axis.
+
+* main.py: main function that can convert a specified mol2 file into Voronoi Diagram. See run options in help.
+```
+usage:
+python main.py -mol ./mol/4v94E.mol2 -out ./imgs/ -dpi 120 -alpha 0.5 -size 256 -direction 0 -rot_angle 0 -flip 0
+```
 
 * extract_mols.sh: a script that extracts .mol2 files that have the same direction from the origin .mol2 file folder.
 ```
@@ -34,15 +44,16 @@ bionoi constructs the [voronoi diagram](https://en.wikipedia.org/wiki/Voronoi_di
    python split_folder_binary_classification.py -opMode control_vs_nucleotide
 ```
 
-* split_folder_cv: split the folder gernerated by extract_mols.sh, then gernerate a new folder containing .mol2 files to perform k-fold cross-validation for binary classification.
+* split_folder_cv.py: split the folder gernerated by extract_mols.sh, then gernerate a new folder containing .mol2 files to perform k-fold cross-validation for binary classification.
 ```
    usage: 
    python split_folder_cv.py -opMode control_vs_heme
    python split_folder_cv.py -opMode control_vs_nucleotide
 ```
 
-* img_gen: take the .mol2 files and generate images for each of them. User can specify options to control number of images generated for each .mol2 file:
+* img_gen.py: take the .mol2 files and generate images for each of them. User can specify options to control number of images generated for each .mol2 file:
 ```
+run options:
 -opMode: operation mode, specifies which classification task to generate images for.  
 -proDirect: projecting direction. 0 to projecting from all 6 directions. 1, 2, 3, 4, 5 and 6 specifies 1 of the 6 directions.  
 -rotAngle2D: rotating angles of generated images. 0 for all angles. 1, 2, 3, 4 correspond to 0, 90, 180, 270 degrees.    
@@ -54,7 +65,7 @@ See help for more info about other options.
    python img_gen.py -opMode control_vs_heme -proDirect 1 -rotAngle2D 1 -flip 1
 ```
 
-* info_gen: generate files for finial analysis.
+* info_gen.py: generate files for finial analysis.
 ```
    usage: 
    python info_gen.py
@@ -62,11 +73,7 @@ See help for more info about other options.
 
 ## Examples
 
-create a 2D image using mol2 file in 2D or 3D format
-
-    ./voronoi.py
-    or
-    ./voronoi.py -mol 4v94E.mol2 -out out.jpg -dpi 120 -alpha 0.5 -size 128
+create a 2D image using mol2 file in 2D or 3D format.  
 
 An example of voronoi image of ATP-binding site protein pocket colored by atom types:
 
